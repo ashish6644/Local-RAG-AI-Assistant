@@ -13,6 +13,7 @@ No API keys, no cloud services, no Docker.
 - History-aware question rewriting, optional multi-query retrieval, MMR or similarity search,
   Top-K, similarity threshold, per-document search scope
 - Model settings: pick chat/embedding models, temperature, top-p, max tokens, connection test
+- One-click **Rebuild vector index** after switching embedding models
 - Retrieval evaluation utility (`python -m core.evaluation cases.json`)
 
 ## Requirements
@@ -49,8 +50,9 @@ python -m streamlit run app.py --server.port 8501
 3. **Settings** -> change models, chunking, retrieval; *Test models* checks Ollama end to end.
 
 Notes
-- Chunk settings apply when a document is indexed. After changing chunking or the **embedding model**,
-  press 🔄 on each document to re-index (vectors of different models are incompatible).
+- Chunk settings apply when a document is indexed; after changing chunking, press 🔄 on that document to re-index it.
+- After changing the **embedding model**, open **Documents → 🛠 Maintenance → Rebuild vector index**.
+  ChromaDB fixes the vector size when the index is created, so a per-document re-index alone can fail.
 - If nothing relevant is found (similarity below threshold) the app says the documents lack
   sufficient information, without calling the LLM.
 

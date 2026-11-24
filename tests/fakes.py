@@ -42,6 +42,9 @@ class FakeStore:
     def delete_document(self, document_id):
         self.rows = {k: v for k, v in self.rows.items() if v["meta"]["document_id"] != document_id}
 
+    def reset(self):
+        self.rows.clear()
+
     def count(self):
         return len(self.rows)
 

@@ -46,3 +46,21 @@ class DocumentService:
             self.repo.update_document_status(document_id, "failed", 0, "The stored file is missing; upload it again.")
             return IngestResult("failed", "The stored file is missing; upload it again.", doc.filename, doc)
         return self.ingestion.index_document(doc, cfg)
+
+    def rebuild_index(self, cfg: Settings) -> tuple[int, int]:
+        """Drop all vectors, then re-index every document. Returns (indexed, failed).
+
+        ChromaDB fixes a collection's vector size at creation time, so switching to an embedding
+        model with a different dimension needs a fresh collection rather than a per-document
+        re-index. Documents whose stored file is missing are marked as failed and counted.
+        """
+        self.store.reset()
+        indexed = failed = 0
+        for doc in self.repo.list_documents():
+            result = self.reindex(doc.document_id, cfg)
+            if result is not None and result.status == "ready":
+                indexed += 1
+            else:
+                failed += 1
+        logger.info("Rebuilt vector index: %d indexed, %d failed", indexed, failed)
+        return indexed, failed

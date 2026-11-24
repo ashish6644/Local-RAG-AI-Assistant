@@ -33,6 +33,14 @@ def _cancel_delete() -> None:
     st.session_state["confirm_delete"] = None
 
 
+def _request_rebuild() -> None:
+    st.session_state["confirm_rebuild"] = True
+
+
+def _cancel_rebuild() -> None:
+    st.session_state["confirm_rebuild"] = False
+
+
 def render_document_manager(services: Services) -> None:
     settings = st.session_state["settings"]
     st.header("Documents")
@@ -40,6 +48,38 @@ def render_document_manager(services: Services) -> None:
         f"Supported: {', '.join(e.upper().lstrip('.') for e in ALLOWED_EXTENSIONS)} · max {settings.max_upload_mb} MB per file · "
         f"chunk size {settings.chunk_size}, overlap {settings.chunk_overlap}"
     )
+    if message := st.session_state.pop("flash_success", None):
+        st.success(message)
+
+    with st.expander("🛠 Maintenance"):
+        st.caption(
+            "ChromaDB fixes the vector size when the index is created, so after changing the "
+            "embedding model a per-document re-index can fail. Rebuild the whole index instead."
+        )
+        st.button("Rebuild vector index", key="rebuild_index", on_click=_request_rebuild)
+        if st.session_state.get("confirm_rebuild"):
+            st.warning("Delete and rebuild the search index for every uploaded document?")
+            yes, no, _ = st.columns([1, 1, 4])
+            if yes.button("Yes, rebuild", key="confirm_rebuild_yes", type="primary"):
+                ok, preflight_message = services.models.preflight(
+                    settings.chat_model, settings.embedding_model, need_chat=False
+                )
+                if not ok:
+                    show_error(preflight_message)
+                else:
+                    with st.spinner("Rebuilding the vector index…"):
+                        try:
+                            indexed, failed = services.documents.rebuild_index(settings)
+                        except AppError as exc:
+                            show_error(str(exc))
+                        else:
+                            st.session_state["confirm_rebuild"] = False
+                            st.session_state["flash_success"] = (
+                                f"Rebuilt the index for {indexed} document(s)."
+                                + (f" {failed} could not be rebuilt." if failed else "")
+                            )
+                            st.rerun()
+            no.button("Cancel", key="confirm_rebuild_no", on_click=_cancel_rebuild)
 
     with st.form("upload_form", clear_on_submit=True):
         files = st.file_uploader(

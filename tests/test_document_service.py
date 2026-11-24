@@ -72,3 +72,31 @@ def test_delete_unknown_document_returns_false(tmp_path):
     cfg, _, _, _, documents = setup(tmp_path)
 
     assert documents.delete_document(123) is False
+
+
+def test_rebuild_index_resets_vectors_and_reindexes_every_document(tmp_path):
+    cfg, repo, store, ingestion, documents = setup(tmp_path, chunk_size=200)
+    first = ingestion.ingest_bytes("one.txt", TEXT, cfg)
+    second = ingestion.ingest_bytes("two.txt", ("Wind power is expanding. " * 30).encode(), cfg)
+    before = first.document.chunk_count + second.document.chunk_count
+    smaller = Settings(data_dir=cfg.data_dir, chunk_size=100, chunk_overlap=10)
+
+    indexed, failed = documents.rebuild_index(smaller)
+
+    assert (indexed, failed) == (2, 0)
+    assert store.count() == sum(doc.chunk_count for doc in repo.list_documents())
+    assert store.count() > before
+
+
+def test_rebuild_index_marks_missing_files_failed(tmp_path):
+    cfg, repo, store, ingestion, documents = setup(tmp_path)
+    keep = ingestion.ingest_bytes("keep.txt", TEXT, cfg)
+    gone = ingestion.ingest_bytes("gone.txt", ("Wind power is expanding. " * 30).encode(), cfg)
+    cfg.resolve_data_path(gone.document.file_path).unlink()
+
+    indexed, failed = documents.rebuild_index(cfg)
+
+    assert (indexed, failed) == (1, 1)
+    assert repo.get_document(gone.document.document_id).processing_status == "failed"
+    assert repo.get_document(keep.document.document_id).processing_status == "ready"
+    assert store.count() == keep.document.chunk_count

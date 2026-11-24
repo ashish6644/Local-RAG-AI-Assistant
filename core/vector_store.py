@@ -42,6 +42,7 @@ class RetrievedChunk:
 
 class VectorStore:
     def __init__(self, persist_dir: Path, collection_name: str = "documents") -> None:
+        self.collection_name = collection_name
         try:
             import chromadb
             from chromadb.config import Settings as ChromaSettings
@@ -59,6 +60,29 @@ class VectorStore:
                 f"Could not open the vector database at {persist_dir}. "
                 "If the problem persists, close other copies of the app or delete the chroma_db folder "
                 "(documents can then be re-indexed)."
+            ) from exc
+
+    def reset(self) -> None:
+        """Delete every vector and recreate the collection.
+
+        ChromaDB fixes a collection's vector dimension when it is created, so switching to an
+        embedding model with a different size requires a fresh collection. Callers are expected
+        to re-index the documents afterwards (DocumentService.rebuild_index does both).
+        """
+        try:
+            try:
+                self._client.delete_collection(self.collection_name)
+            except Exception as exc:  # already missing is fine
+                if "does not exist" not in str(exc).lower() and "not found" not in str(exc).lower():
+                    raise
+            self._collection = self._client.get_or_create_collection(
+                name=self.collection_name, metadata={"hnsw:space": "cosine"}
+            )
+        except Exception as exc:
+            logger.exception("Could not reset the vector collection")
+            raise VectorStoreError(
+                "Could not rebuild the vector database. Close other copies of the app, "
+                "delete the chroma_db folder, and restart."
             ) from exc
 
     def add_chunks(
