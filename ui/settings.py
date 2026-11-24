@@ -44,7 +44,10 @@ def render_settings(services: Services) -> None:
         st.warning("Missing models. Download them in a terminal:")
         st.code("\n".join(pull_command(m) for m in missing), language="powershell")
     if embed_model != current.embedding_model:
-        st.info("Changing the embedding model requires re-indexing existing documents (🔄 on the Documents page).")
+        st.info(
+            "After saving a different embedding model, rebuild the whole index: "
+            "Documents → 🛠 Maintenance → Rebuild vector index."
+        )
 
     st.subheader("Generation")
     g1, g2 = st.columns(2)

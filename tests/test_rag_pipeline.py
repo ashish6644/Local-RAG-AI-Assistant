@@ -36,6 +36,17 @@ def test_history_window_limits_messages_and_rewrite_runs():
     assert len(msgs) == 1 + 2 + 1
 
 
+def test_history_window_zero_disables_rewriting():
+    p, ollama = pipeline()
+    history = [{"role": "user", "content": "earlier"}, {"role": "assistant", "content": "answer"}]
+    no_history = RAGParams(chat_model="m", embedding_model="e", threshold=0.0, history_window=0)
+
+    retrieval = p.retrieve("and the second one?", history, no_history)
+
+    assert retrieval.query == "and the second one?"
+    assert not ollama.chat_calls
+
+
 def test_no_documents_and_no_match_never_call_the_llm():
     p, ollama = pipeline(docs=False)
     r = p.retrieve("anything", [], PARAMS)

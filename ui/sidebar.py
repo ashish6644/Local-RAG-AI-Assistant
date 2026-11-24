@@ -64,7 +64,11 @@ def render_sidebar(services: Services) -> str:
             col_del.button("🗑", key=f"del_{conv.conversation_id}", help="Delete conversation",
                            on_click=_delete_chat, args=(services, conv.conversation_id))
 
-        docs = services.documents.list_documents()
+        try:
+            docs = services.documents.list_documents()
+        except AppError as exc:
+            st.error(str(exc))
+            docs = []
         with st.expander(f"📄 Documents ({len(docs)})"):
             if not docs:
                 st.caption("No documents uploaded. Open the Documents page to add some.")

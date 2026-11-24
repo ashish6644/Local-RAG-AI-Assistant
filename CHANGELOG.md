@@ -4,6 +4,31 @@ All notable changes to **Local RAG AI Assistant**, grouped by the four-day build
 The project is feature-complete: the full pytest suite passes locally (80 passed, 1 skipped —
 the skip is the real-ChromaDB persistence test and requires `chromadb`).
 
+## Final hardening pass (2026-11-24)
+
+### Fixed
+- Long filenames keep their extension when truncated, so a valid file is no longer rejected as
+  an unsupported type.
+- A `user_settings.json` containing a non-object (e.g. `[]` or `null`) is ignored instead of
+  crashing startup, and settings saves are atomic.
+- The embedding-model selector only offers detected embedding models (with a fallback when none
+  is recognised), preventing a chat model from being selected as the embedder.
+- Failed uploads no longer abort the rest of a multi-file batch, and sidebar document listing is
+  guarded.
+- Deleting a document whose metadata deletion fails marks the row failed instead of leaving it
+  "ready"; re-indexing a missing file removes its stale vectors.
+- Whole-index rebuild validates the embedding model before resetting and marks documents
+  *processing* first, so an interrupted rebuild is recoverable and visible.
+- `history_window = 0` disables query rewriting, malformed Ollama JSON becomes a friendly
+  `OllamaError`, and the Streamlit upload cap matches the app's 1024 MB limit.
+- The Stop button sets an explicit cancellation flag before closing the generator.
+
+### Added
+- `setup.sh` / `run.sh` for macOS and Linux, plus a README section for them.
+- `setup.bat` / `run.bat` validate the existing `.venv` Python version and always use the
+  virtual environment interpreter (no silent fallback to the system Python).
+- Regression tests for every fix above (94 passed, 1 skipped).
+
 ## Day 4 — Tests and final hardening (2026-11-24)
 
 ### Added

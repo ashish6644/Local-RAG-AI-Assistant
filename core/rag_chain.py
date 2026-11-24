@@ -85,7 +85,7 @@ class RAGPipeline:
 
     # ---- query preparation --------------------------------------------
     def rewrite_question(self, question: str, history: Sequence[dict], params: RAGParams) -> str:
-        recent = list(history)[-4:]
+        recent = list(history)[-params.history_window:] if params.history_window > 0 else []
         prompt = pt.REWRITE_PROMPT.format(history=pt.format_history(recent), question=question)
         try:
             raw = self.client.chat(
@@ -124,7 +124,7 @@ class RAGPipeline:
         if self.retriever.store.count() == 0:
             return RetrievalResult(question, [question], [], "no_documents")
         standalone = question
-        if params.rewrite and history:
+        if params.rewrite and history and params.history_window > 0:
             standalone = self.rewrite_question(question, history, params)
         variants = [standalone]
         if params.multi_query:

@@ -42,6 +42,17 @@ class OllamaClient:
         except Exception:  # pragma: no cover - defensive
             return ""
 
+    @staticmethod
+    def _json(response: Any, context: str) -> dict:
+        """Decode a JSON object, converting malformed responses into a user-facing error."""
+        try:
+            data = response.json()
+        except ValueError as exc:
+            raise OllamaError(f"Ollama returned an invalid response ({context}).") from exc
+        if not isinstance(data, dict):
+            raise OllamaError(f"Ollama returned an invalid response ({context}).")
+        return data
+
     def _raise_for_status(self, response: Any, model: Optional[str]) -> None:
         if response.status_code == 200:
             return
@@ -76,7 +87,7 @@ class OllamaClient:
         except requests.exceptions.RequestException as exc:
             raise OllamaError(f"Request to Ollama failed: {exc}") from exc
         self._raise_for_status(response, None)
-        return response.json()
+        return self._json(response, path)
 
     # ---- status / models ----------------------------------------------
     def is_running(self, timeout: float = 2.0) -> bool:
@@ -102,7 +113,7 @@ class OllamaClient:
     # ---- embeddings ----------------------------------------------------
     def embed(self, model: str, texts: list[str]) -> list[list[float]]:
         response = self._post("/api/embed", {"model": model, "input": texts}, model=model)
-        embeddings = response.json().get("embeddings")
+        embeddings = self._json(response, "/api/embed").get("embeddings")
         if not embeddings or len(embeddings) != len(texts):
             raise OllamaError(
                 f"Ollama returned an unexpected embedding response for model '{model}'."
@@ -116,7 +127,7 @@ class OllamaClient:
 
     def chat(self, model: str, messages: list[dict], options: Optional[dict] = None) -> str:
         response = self._post("/api/chat", self._chat_payload(model, messages, options, False), model=model)
-        data = response.json()
+        data = self._json(response, "/api/chat")
         if "error" in data:
             raise OllamaError(str(data["error"]))
         return str(data.get("message", {}).get("content", ""))

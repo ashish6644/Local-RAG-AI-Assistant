@@ -44,6 +44,20 @@ ollama pull nomic-embed-text
 python -m streamlit run app.py --server.port 8501
 ```
 
+## Install & run (macOS / Linux)
+1. Open a terminal in the project folder.
+2. Make the scripts executable once: `chmod +x setup.sh run.sh`.
+3. Run **`./setup.sh`** (creates `.venv`, installs dependencies, checks Ollama).
+4. Install Ollama, then download the models:
+   ```bash
+   ollama pull llama3.2:3b
+   ollama pull nomic-embed-text
+   ```
+5. Run **`./run.sh`** and open <http://localhost:8501>.
+
+Both scripts require Python 3.11 or 3.12 (`python3.12`, `python3.11` or `python3` on PATH).
+If an existing `.venv` was created with another version, delete it and run the setup script again.
+
 ## Using the app
 1. **Documents** page -> choose files -> *Upload & index*.
 2. **Chat** page -> ask questions. Expand *Sources & retrieval details* under any answer.
@@ -53,6 +67,8 @@ Notes
 - Chunk settings apply when a document is indexed; after changing chunking, press 🔄 on that document to re-index it.
 - After changing the **embedding model**, open **Documents → 🛠 Maintenance → Rebuild vector index**.
   ChromaDB fixes the vector size when the index is created, so a per-document re-index alone can fail.
+- A rebuild is destructive-first: the existing index is deleted, then every stored document is
+  re-indexed. If it is interrupted, run it again; documents stay marked *processing* until indexed.
 - If nothing relevant is found (similarity below threshold) the app says the documents lack
   sufficient information, without calling the LLM.
 
@@ -70,7 +86,8 @@ database/         SQLAlchemy models, connection, repository
 services/         chat, ingestion, documents, model checks, service container
 ui/               sidebar, chat, documents, settings, shared components
 tests/            pytest suite (Ollama and Chroma are faked where needed)
-data/             created automatically: uploads/, chroma_db/, app.db, user_settings.json
+data/             created automatically: uploads/, chroma_db/, app.db
+                  (user_settings.json appears after you save Settings)
 logs/             created automatically: app.log
 ```
 
@@ -96,5 +113,6 @@ Most tests use fakes and need no Ollama. `test_real_chroma_persistence` uses the
 | "Cannot connect to Ollama" | Start the Ollama app or run `ollama serve` |
 | "Model ... is not installed" | `ollama pull <model>` (shown in the message) |
 | Slow answers | Use a smaller model (`llama3.2:1b`), lower Top K or context window |
-| Weird vector-size error after changing embedding model | Re-index documents (🔄) |
+| Weird vector-size error after changing embedding model | **Documents → 🛠 Maintenance → Rebuild vector index** |
+| Rebuild stopped part-way | Run **Rebuild vector index** again; unfinished documents are marked *processing* |
 | Details of any error | `logs/app.log` |

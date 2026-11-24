@@ -5,6 +5,7 @@ pytest.importorskip("pydantic")
 pytest.importorskip("langchain_text_splitters")
 
 from config.settings import Settings
+from core.errors import AppError, DatabaseError
 from database.connection import Database
 from database.repository import Repository
 from fakes import FakeEmbedder, FakeStore
@@ -42,6 +43,18 @@ def test_reindex_with_missing_file_marks_the_document_failed(tmp_path):
     assert repo.get_document(result.document.document_id).processing_status == "failed"
 
 
+def test_reindex_with_missing_file_removes_stale_vectors(tmp_path):
+    cfg, repo, store, ingestion, documents = setup(tmp_path)
+    result = ingestion.ingest_bytes("notes.txt", TEXT, cfg)
+    assert store.count_document(result.document.document_id) > 0
+    cfg.resolve_data_path(result.document.file_path).unlink()
+
+    documents.reindex(result.document.document_id, cfg)
+
+    assert store.count_document(result.document.document_id) == 0
+    assert repo.get_document(result.document.document_id).processing_status == "failed"
+
+
 def test_reindex_rebuilds_vectors_with_the_new_chunking(tmp_path):
     cfg, repo, store, ingestion, documents = setup(tmp_path, chunk_size=200)
     result = ingestion.ingest_bytes("notes.txt", TEXT, cfg)
@@ -74,6 +87,22 @@ def test_delete_unknown_document_returns_false(tmp_path):
     assert documents.delete_document(123) is False
 
 
+def test_delete_marks_the_row_failed_when_metadata_deletion_fails(tmp_path, monkeypatch):
+    cfg, repo, store, ingestion, documents = setup(tmp_path)
+    result = ingestion.ingest_bytes("notes.txt", TEXT, cfg)
+
+    def broken_delete(_document_id):
+        raise DatabaseError("database is locked")
+
+    monkeypatch.setattr(repo, "delete_document", broken_delete)
+
+    with pytest.raises(AppError, match="locked"):
+        documents.delete_document(result.document.document_id)
+
+    assert store.count() == 0
+    assert repo.get_document(result.document.document_id).processing_status == "failed"
+
+
 def test_rebuild_index_resets_vectors_and_reindexes_every_document(tmp_path):
     cfg, repo, store, ingestion, documents = setup(tmp_path, chunk_size=200)
     first = ingestion.ingest_bytes("one.txt", TEXT, cfg)
@@ -100,3 +129,17 @@ def test_rebuild_index_marks_missing_files_failed(tmp_path):
     assert repo.get_document(gone.document.document_id).processing_status == "failed"
     assert repo.get_document(keep.document.document_id).processing_status == "ready"
     assert store.count() == keep.document.chunk_count
+
+
+def test_rebuild_index_aborts_before_reset_when_embedding_fails(tmp_path):
+    cfg, repo, store, ingestion, documents = setup(tmp_path)
+    result = ingestion.ingest_bytes("notes.txt", TEXT, cfg)
+    before = store.count()
+    ingestion.embedder.fail = True
+
+    with pytest.raises(AppError):
+        documents.rebuild_index(cfg)
+
+    # A broken embedding model must not wipe a healthy index.
+    assert store.count() == before
+    assert repo.get_document(result.document.document_id).processing_status == "ready"

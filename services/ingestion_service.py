@@ -33,10 +33,19 @@ class IngestResult:
         return self.status == "ready"
 
 
+MAX_FILENAME_LENGTH = 120
+
+
 def sanitize_filename(name: str) -> str:
     base = Path(name.replace("\\", "/")).name
     base = re.sub(r"[^A-Za-z0-9._() \-]", "_", base).strip(" .")
-    return (base or "document")[:120]
+    if not base:
+        return "document"
+    # Truncate the stem, never the extension: the extension is validated afterwards.
+    suffix = Path(base).suffix
+    if len(base) > MAX_FILENAME_LENGTH:
+        base = base[: MAX_FILENAME_LENGTH - len(suffix)] + suffix
+    return base
 
 
 class IngestionService:

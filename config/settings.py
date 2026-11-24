@@ -128,10 +128,13 @@ def load_user_overrides(settings: Settings) -> dict[str, Any]:
         return {}
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-        return {k: v for k, v in data.items() if k in USER_EDITABLE}
     except (OSError, ValueError):
         logging.getLogger(__name__).warning("Could not read %s", path)
         return {}
+    if not isinstance(data, dict):
+        logging.getLogger(__name__).warning("Ignoring %s: expected a JSON object", path)
+        return {}
+    return {k: v for k, v in data.items() if k in USER_EDITABLE}
 
 
 def save_user_overrides(settings: Settings) -> None:
@@ -139,7 +142,14 @@ def save_user_overrides(settings: Settings) -> None:
     path = settings.data_dir / USER_SETTINGS_FILE
     path.parent.mkdir(parents=True, exist_ok=True)
     dumped = settings.model_dump()
-    path.write_text(json.dumps({k: dumped[k] for k in USER_EDITABLE}, indent=2), encoding="utf-8")
+    payload = json.dumps({k: dumped[k] for k in USER_EDITABLE}, indent=2)
+    # Write atomically so an interrupted save cannot corrupt the overrides file.
+    tmp = path.with_name(path.name + ".tmp")
+    try:
+        tmp.write_text(payload, encoding="utf-8")
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def with_updates(settings: Settings, **updates: Any) -> Settings:

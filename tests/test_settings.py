@@ -104,6 +104,23 @@ def test_load_user_overrides_ignores_broken_json(tmp_path):
     assert load_user_overrides(settings) == {}
 
 
+@pytest.mark.parametrize("payload", ["[]", "null", '"text"', "42"])
+def test_load_user_overrides_ignores_non_object_json(tmp_path, payload):
+    settings = Settings(data_dir=tmp_path)
+    (tmp_path / "user_settings.json").write_text(payload, encoding="utf-8")
+
+    assert load_user_overrides(settings) == {}
+
+
+def test_save_user_overrides_is_atomic_and_leaves_no_temp_file(tmp_path):
+    settings = Settings(data_dir=tmp_path)
+
+    save_user_overrides(settings)
+
+    assert (tmp_path / "user_settings.json").is_file()
+    assert not (tmp_path / "user_settings.json.tmp").exists()
+
+
 def test_ensure_directories_creates_every_data_path(tmp_path):
     settings = Settings(data_dir=tmp_path / "data", log_dir=tmp_path / "logs")
 

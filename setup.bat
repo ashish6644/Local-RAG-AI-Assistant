@@ -34,7 +34,16 @@ if not defined PYCMD (
 echo [OK] Using: %PYCMD%
 
 REM ---- 2. Virtual environment ------------------------------------------
-if not exist ".venv\Scripts\python.exe" (
+if exist ".venv\Scripts\python.exe" (
+    REM Reuse the environment only if it was created with a supported Python.
+    ".venv\Scripts\python.exe" -c "import sys; sys.exit(0 if (3,11) <= sys.version_info[:2] <= (3,12) else 1)" >nul 2>nul
+    if errorlevel 1 (
+        echo [ERROR] The existing .venv uses an unsupported Python version.
+        echo         Delete the .venv folder and run setup.bat again with Python 3.11 or 3.12.
+        pause
+        exit /b 1
+    )
+) else (
     echo Creating virtual environment...
     %PYCMD% -m venv .venv
     if errorlevel 1 (
@@ -43,12 +52,18 @@ if not exist ".venv\Scripts\python.exe" (
         exit /b 1
     )
 )
-call ".venv\Scripts\activate.bat"
+set "VENV_PY=.venv\Scripts\python.exe"
+if not exist "%VENV_PY%" (
+    echo [ERROR] The virtual environment is incomplete: %VENV_PY% is missing.
+    echo         Delete the .venv folder and run setup.bat again.
+    pause
+    exit /b 1
+)
 
-REM ---- 3. Dependencies ---------------------------------------------------
+REM ---- 3. Dependencies -------------------------------------------------
 echo Installing dependencies ^(this can take several minutes the first time^)...
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+"%VENV_PY%" -m pip install --upgrade pip
+"%VENV_PY%" -m pip install -r requirements.txt
 if errorlevel 1 (
     echo [ERROR] Dependency installation failed. Check your internet connection and the messages above.
     pause
@@ -60,11 +75,11 @@ if not exist "data\uploads" mkdir "data\uploads"
 if not exist "data\chroma_db" mkdir "data\chroma_db"
 if not exist "logs" mkdir "logs"
 
-REM ---- 4. Ollama check ---------------------------------------------------
+REM ---- 4. Ollama check -------------------------------------------------
 set "CHAT_MODEL=llama3.2:3b"
 set "EMBED_MODEL=nomic-embed-text"
-for /f "delims=" %%M in ('python -c "from config.settings import load_settings; print(load_settings().chat_model)" 2^>nul') do set "CHAT_MODEL=%%M"
-for /f "delims=" %%M in ('python -c "from config.settings import load_settings; print(load_settings().embedding_model)" 2^>nul') do set "EMBED_MODEL=%%M"
+for /f "delims=" %%M in ('.venv\Scripts\python.exe -c "from config.settings import load_settings; print(load_settings().chat_model)" 2^>nul') do set "CHAT_MODEL=%%M"
+for /f "delims=" %%M in ('.venv\Scripts\python.exe -c "from config.settings import load_settings; print(load_settings().embedding_model)" 2^>nul') do set "EMBED_MODEL=%%M"
 
 where ollama >nul 2>nul
 if errorlevel 1 (

@@ -65,8 +65,14 @@ def test_chat_and_embedding_model_lists_are_separated():
     service = ModelService(FakeOllama(models=("llama3.2:3b", "nomic-embed-text", "bge-small")))
 
     assert service.chat_models() == ["llama3.2:3b"]
-    # Embedding models are listed first, then the remaining (chat) models.
-    assert service.embedding_models() == ["bge-small", "nomic-embed-text", "llama3.2:3b"]
+    # Only detected embedding models are offered; a chat model must never be selectable.
+    assert service.embedding_models() == ["bge-small", "nomic-embed-text"]
+
+
+def test_embedding_models_falls_back_to_all_when_none_is_detected():
+    service = ModelService(FakeOllama(models=("llama3.2:3b", "custom-model")))
+
+    assert service.embedding_models() == ["custom-model", "llama3.2:3b"]
 
 
 def test_preflight_passes_when_required_models_exist():

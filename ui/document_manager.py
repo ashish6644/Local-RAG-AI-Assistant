@@ -101,8 +101,15 @@ def render_document_manager(services: Services) -> None:
                 progress = st.progress(0.0)
                 for index, uploaded in enumerate(files, start=1):
                     with st.spinner(f"Processing {uploaded.name}…"):
-                        result = services.ingestion.ingest_bytes(uploaded.name, uploaded.getvalue(), settings)
-                    _show_result(result)
+                        try:
+                            result = services.ingestion.ingest_bytes(uploaded.name, uploaded.getvalue(), settings)
+                        except AppError as exc:
+                            st.error(f"{uploaded.name}: {exc}", icon="❌")
+                        except OSError as exc:
+                            logger.exception("Could not store upload %s", uploaded.name)
+                            st.error(f"{uploaded.name}: the file could not be saved ({exc}).", icon="❌")
+                        else:
+                            _show_result(result)
                     progress.progress(index / len(files))
 
     try:

@@ -24,6 +24,10 @@ def _set_pending(prompt: str) -> None:
     st.session_state["pending_prompt"] = prompt
 
 
+def _request_stop() -> None:
+    st.session_state["stop_requested"] = True
+
+
 def _render_message(msg) -> None:
     with st.chat_message(msg.role):
         st.markdown(msg.content)
@@ -72,17 +76,20 @@ def _welcome(ready_docs) -> None:
 
 def _stream_answer(services: Services, conv_id: int, prompt: str, params: RAGParams) -> bool:
     """Render a streaming answer. Returns True if it finished without an error."""
+    st.session_state["stop_requested"] = False
     with st.chat_message("user"):
         st.markdown(prompt)
     with st.chat_message("assistant"):
         status = st.empty()
         status.markdown("⏳ _Thinking…_")
-        st.button("⏹ Stop generating", key=f"stop_{conv_id}")
+        st.button("⏹ Stop generating", key=f"stop_{conv_id}", on_click=_request_stop)
         box = st.empty()
         text = ""
         generator = services.chat.ask(conv_id, prompt, params)
         try:
             for event in generator:
+                if st.session_state.get("stop_requested"):
+                    break
                 if event["type"] == "status":
                     status.markdown(f"⏳ _{event['text']}_")
                 elif event["type"] == "token":
@@ -108,6 +115,7 @@ def _stream_answer(services: Services, conv_id: int, prompt: str, params: RAGPar
             return False
         finally:
             generator.close()  # saves a partial answer if the stop button interrupted us
+            st.session_state["stop_requested"] = False
 
 
 def render_chat(services: Services) -> None:

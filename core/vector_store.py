@@ -106,7 +106,8 @@ class VectorStore:
             if "dimension" in str(exc).lower():
                 msg += (
                     " The embedding model changed since earlier documents were indexed "
-                    "(different vector size). Re-index your documents from the Documents page."
+                    "(different vector size). Rebuild the vector index from "
+                    "Documents → 🛠 Maintenance."
                 )
             raise VectorStoreError(msg) from exc
 
@@ -156,7 +157,7 @@ class VectorStore:
             if "dimension" in str(exc).lower():
                 msg += (
                     " The selected embedding model produces vectors of a different size than the "
-                    "indexed documents. Re-index your documents from the Documents page."
+                    "indexed documents. Rebuild the vector index from Documents → 🛠 Maintenance."
                 )
             raise VectorStoreError(msg) from exc
 

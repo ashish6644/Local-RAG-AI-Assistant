@@ -36,7 +36,10 @@ class ModelService:
 
     def embedding_models(self) -> list[str]:
         models = self.installed_models()
-        return sorted(models, key=lambda m: (not is_embedding_model(m), m))
+        detected = [m for m in models if is_embedding_model(m)]
+        # Fall back to every model only when no embedding-capable name was detected, so an
+        # unfamiliar embedding model can still be selected.
+        return sorted(detected or models)
 
     def preflight(
         self, chat_model: str, embedding_model: str, need_chat: bool = True, need_embedding: bool = True

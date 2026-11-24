@@ -87,3 +87,21 @@ def test_embed_validates_count():
 def test_model_installed_handles_latest_tag():
     assert OllamaClient.model_installed("nomic-embed-text", ["nomic-embed-text:latest"])
     assert not OllamaClient.model_installed("llama3.2:3b", ["llama3.2:1b"])
+
+
+class BadJsonResponse(FakeResponse):
+    def json(self):
+        raise ValueError("not json")
+
+
+def test_malformed_json_becomes_a_friendly_error():
+    with pytest.raises(OllamaError, match="invalid response"):
+        client_with(response=BadJsonResponse()).chat("m", [])
+
+    with pytest.raises(OllamaError, match="invalid response"):
+        client_with(response=FakeResponse(body=[1, 2])).embed("m", ["a"])
+
+
+def test_malformed_json_from_model_listing_is_wrapped():
+    with pytest.raises(OllamaError, match="invalid response"):
+        client_with(response=BadJsonResponse()).list_models()

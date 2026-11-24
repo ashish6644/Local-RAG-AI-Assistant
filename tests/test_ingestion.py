@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 pytest.importorskip("sqlalchemy")
@@ -9,7 +11,7 @@ from database.connection import Database
 from database.repository import Repository
 from fakes import FakeEmbedder, FakeStore
 from services.document_service import DocumentService
-from services.ingestion_service import IngestionService
+from services.ingestion_service import IngestionService, sanitize_filename
 
 
 def setup(tmp_path, embedder=None):
@@ -23,6 +25,18 @@ def setup(tmp_path, embedder=None):
 
 
 TEXT = ("Solar energy is growing quickly. " * 30).encode()
+
+
+def test_long_filenames_keep_their_extension():
+    safe = sanitize_filename("a" * 118 + ".pdf")
+
+    assert len(safe) <= 120
+    assert Path(safe).suffix == ".pdf"
+
+
+def test_sanitize_filename_strips_paths_and_falls_back():
+    assert sanitize_filename("../../notes.txt") == "notes.txt"
+    assert sanitize_filename("...") == "document"
 
 
 def test_ingest_duplicate_delete_cycle(tmp_path):
