@@ -1,8 +1,23 @@
 # Changelog
 
 All notable changes to **Local RAG AI Assistant**, grouped by the four-day build plan.
-The project is feature-complete: the full pytest suite passes locally (80 passed, 1 skipped —
+The project is feature-complete: the full pytest suite passes locally (94 passed, 1 skipped —
 the skip is the real-ChromaDB persistence test and requires `chromadb`).
+
+## Repository polish (2026-11-27)
+
+### Added
+- MIT `LICENSE`.
+- GitHub Actions CI (`.github/workflows/ci.yml`) running Ruff and pytest on Python 3.11 and 3.12.
+- `requirements-dev.txt` separating test/lint tooling from runtime dependencies.
+- `pyproject.toml` with the Ruff configuration.
+- `docs/ARCHITECTURE.md` with component/ER diagrams, flows and design decisions.
+- `examples/evaluation_cases.json` and a README section for the retrieval-evaluation CLI.
+
+### Changed
+- README now has CI/Python/license badges, a highlights section, architecture link and updated
+  test instructions.
+- Lint cleanup across the codebase (import order, modern type syntax, defensive-catch annotations).
 
 ## Final hardening pass (2026-11-24)
 

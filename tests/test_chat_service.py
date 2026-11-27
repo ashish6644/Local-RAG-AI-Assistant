@@ -2,11 +2,12 @@ import pytest
 
 pytest.importorskip("sqlalchemy")
 
+from fakes import FakeEmbedder, FakeOllama, FakeStore, fake_vector
+
 from core.rag_chain import RAGParams, RAGPipeline
 from core.retriever import Retriever
 from database.connection import Database
 from database.repository import Repository
-from fakes import FakeEmbedder, FakeOllama, FakeStore, fake_vector
 from services.chat_service import ChatService
 
 PARAMS = RAGParams(chat_model="m", embedding_model="e", threshold=0.0, rewrite=False)

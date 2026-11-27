@@ -123,7 +123,7 @@ def render_document_manager(services: Services) -> None:
         return
 
     header = st.columns([3.2, 1, 1.6, 1.4, 1, 2])
-    for col, label in zip(header, ["File", "Size", "Uploaded", "Status", "Chunks", "Actions"]):
+    for col, label in zip(header, ["File", "Size", "Uploaded", "Status", "Chunks", "Actions"], strict=True):
         col.markdown(f"**{label}**")
 
     pending = st.session_state.get("confirm_delete")

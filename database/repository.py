@@ -1,7 +1,8 @@
 """Data-access layer for conversations, messages and documents."""
 from __future__ import annotations
 
-from typing import Any, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 from sqlalchemy import select
 
@@ -28,7 +29,7 @@ class Repository:
             )
             return list(s.scalars(stmt))
 
-    def get_conversation(self, conversation_id: int) -> Optional[Conversation]:
+    def get_conversation(self, conversation_id: int) -> Conversation | None:
         with self.db.session() as s:
             return s.get(Conversation, conversation_id)
 
@@ -93,15 +94,15 @@ class Repository:
             s.flush()
             return doc
 
-    def get_document(self, document_id: int) -> Optional[Document]:
+    def get_document(self, document_id: int) -> Document | None:
         with self.db.session() as s:
             return s.get(Document, document_id)
 
-    def get_document_by_hash(self, file_hash: str) -> Optional[Document]:
+    def get_document_by_hash(self, file_hash: str) -> Document | None:
         with self.db.session() as s:
             return s.scalars(select(Document).where(Document.file_hash == file_hash)).first()
 
-    def list_documents(self, status: Optional[str] = None) -> list[Document]:
+    def list_documents(self, status: str | None = None) -> list[Document]:
         with self.db.session() as s:
             stmt = select(Document).order_by(Document.uploaded_at.desc(), Document.document_id.desc())
             if status:
@@ -109,8 +110,8 @@ class Repository:
             return list(s.scalars(stmt))
 
     def update_document_status(
-        self, document_id: int, status: str, chunk_count: Optional[int] = None,
-        error: Optional[str] = None,
+        self, document_id: int, status: str, chunk_count: int | None = None,
+        error: str | None = None,
     ) -> None:
         with self.db.session() as s:
             doc = s.get(Document, document_id)
@@ -129,7 +130,7 @@ class Repository:
             s.delete(doc)
             return True
 
-    def count_documents(self, status: Optional[str] = None) -> int:
+    def count_documents(self, status: str | None = None) -> int:
         return len(self.list_documents(status))
 
 

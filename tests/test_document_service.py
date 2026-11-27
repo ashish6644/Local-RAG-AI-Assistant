@@ -4,11 +4,12 @@ pytest.importorskip("sqlalchemy")
 pytest.importorskip("pydantic")
 pytest.importorskip("langchain_text_splitters")
 
+from fakes import FakeEmbedder, FakeStore
+
 from config.settings import Settings
 from core.errors import AppError, DatabaseError
 from database.connection import Database
 from database.repository import Repository
-from fakes import FakeEmbedder, FakeStore
 from services.document_service import DocumentService
 from services.ingestion_service import IngestionService
 
@@ -82,7 +83,7 @@ def test_delete_document_removes_vectors_metadata_and_file(tmp_path):
 
 
 def test_delete_unknown_document_returns_false(tmp_path):
-    cfg, _, _, _, documents = setup(tmp_path)
+    _, _, _, _, documents = setup(tmp_path)
 
     assert documents.delete_document(123) is False
 

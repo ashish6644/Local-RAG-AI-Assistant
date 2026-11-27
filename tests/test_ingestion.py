@@ -6,10 +6,11 @@ pytest.importorskip("sqlalchemy")
 pytest.importorskip("pydantic")
 pytest.importorskip("langchain_text_splitters")
 
+from fakes import FakeEmbedder, FakeStore
+
 from config.settings import Settings
 from database.connection import Database
 from database.repository import Repository
-from fakes import FakeEmbedder, FakeStore
 from services.document_service import DocumentService
 from services.ingestion_service import IngestionService, sanitize_filename
 
@@ -52,11 +53,11 @@ def test_ingest_duplicate_delete_cycle(tmp_path):
 
 
 def test_rejections_and_failures_do_not_crash(tmp_path):
-    cfg, repo, store, ing, _ = setup(tmp_path)
+    cfg, repo, _, ing, _ = setup(tmp_path)
     assert ing.ingest_bytes("virus.exe", b"x", cfg).status == "rejected"
     assert ing.ingest_bytes("empty.txt", b"", cfg).status == "rejected"
     bad = ing.ingest_bytes("broken.pdf", b"not a pdf", cfg)
     assert bad.status == "failed" and repo.list_documents()[0].processing_status == "failed"
-    cfg2, repo2, store2, ing2, _ = setup(tmp_path / "b", FakeEmbedder(fail=True))
+    cfg2, _, store2, ing2, _ = setup(tmp_path / "b", FakeEmbedder(fail=True))
     failed = ing2.ingest_bytes("x.txt", TEXT, cfg2)
     assert failed.status == "failed" and store2.count() == 0

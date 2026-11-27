@@ -1,4 +1,3 @@
-import pytest
 
 from core.errors import OllamaError
 from services.model_service import ModelService, is_embedding_model, pull_command

@@ -4,7 +4,10 @@ import pytest
 
 from core.document_processor import clean_text, process_file
 from core.errors import (
-    DocumentProcessingError, EmptyDocumentError, ScannedPDFError, UnsupportedFileError,
+    DocumentProcessingError,
+    EmptyDocumentError,
+    ScannedPDFError,
+    UnsupportedFileError,
 )
 
 
@@ -101,7 +104,7 @@ def test_xlsx_sheets(tmp_path):
     ws.title = "Sales"
     ws.append(["region", "revenue"])
     ws.append(["North", 100])
-    ws2 = wb.create_sheet("Empty")
+    wb.create_sheet("Empty")
     wb.save(tmp_path / "s.xlsx")
     segs = process_file(tmp_path / "s.xlsx").segments
     assert len(segs) == 1

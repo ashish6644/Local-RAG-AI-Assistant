@@ -1,9 +1,9 @@
 import json
 
 import pytest
+from fakes import make_chunk
 
 from core.evaluation import EvalCase, evaluate_retrieval, is_relevant, load_cases
-from fakes import make_chunk
 
 
 def test_load_cases_supports_single_and_multiple_sources(tmp_path):

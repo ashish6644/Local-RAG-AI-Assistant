@@ -1,7 +1,7 @@
 import pytest
+from fakes import FakeEmbedder, FakeStore, fake_vector
 
 from core.retriever import Retriever
-from fakes import FakeEmbedder, FakeStore, fake_vector
 
 
 def populated_store():

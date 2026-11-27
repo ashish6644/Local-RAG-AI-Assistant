@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -19,19 +20,19 @@ class RetrievedChunk:
     text: str
     metadata: dict[str, Any]
     score: float  # cosine similarity, 1.0 = identical
-    embedding: Optional[np.ndarray] = field(default=None, repr=False)
+    embedding: np.ndarray | None = field(default=None, repr=False)
 
     @property
     def filename(self) -> str:
         return str(self.metadata.get("filename", "unknown"))
 
     @property
-    def document_id(self) -> Optional[int]:
+    def document_id(self) -> int | None:
         value = self.metadata.get("document_id")
         return int(value) if value is not None else None
 
     @property
-    def page(self) -> Optional[int]:
+    def page(self) -> int | None:
         value = self.metadata.get("page")
         return int(value) if value is not None else None
 
@@ -133,7 +134,7 @@ class VectorStore:
 
     def query(
         self, embedding: Sequence[float], n_results: int,
-        document_ids: Optional[Sequence[int]] = None, include_embeddings: bool = False,
+        document_ids: Sequence[int] | None = None, include_embeddings: bool = False,
     ) -> list[RetrievedChunk]:
         total = self.count()
         if total == 0:

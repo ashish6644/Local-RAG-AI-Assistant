@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Iterator, Optional, Sequence
+from typing import TYPE_CHECKING, Any
 
 from core import prompt_templates as pt
 from core.errors import OllamaError
@@ -33,10 +34,10 @@ class RAGParams:
     history_window: int = 6
     rewrite: bool = True
     multi_query: bool = False
-    document_ids: Optional[tuple[int, ...]] = None
+    document_ids: tuple[int, ...] | None = None
 
     @classmethod
-    def from_settings(cls, s: Settings, document_ids: Optional[Sequence[int]] = None) -> "RAGParams":
+    def from_settings(cls, s: Settings, document_ids: Sequence[int] | None = None) -> RAGParams:
         return cls(
             chat_model=s.chat_model, embedding_model=s.embedding_model,
             temperature=s.temperature, top_p=s.top_p, max_tokens=s.max_output_tokens,

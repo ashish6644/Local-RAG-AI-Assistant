@@ -1,0 +1,16 @@
+[
+  {
+    "question": "What happened to revenue in 2023?",
+    "expected_source": "annual_report.pdf",
+    "expected_keywords": ["revenue", "12%"]
+  },
+  {
+    "question": "Which regions are covered?",
+    "expected_sources": ["annual_report.pdf", "sales.csv"],
+    "expected_keywords": ["region"]
+  },
+  {
+    "question": "What are the main findings?",
+    "expected_keywords": ["finding"]
+  }
+]

@@ -1,8 +1,27 @@
 # Local RAG AI Assistant
 
+[![CI](https://github.com/ashish6644/Local-RAG-AI-Assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/ashish6644/Local-RAG-AI-Assistant/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.40-FF4B4B)](https://streamlit.io/)
+
 Chat with your own documents **entirely on your computer**. Retrieval-Augmented Generation with
 Streamlit, Ollama (local LLM + embeddings), ChromaDB (vectors) and SQLite (chat history & metadata).
 No API keys, no cloud services, no Docker.
+
+## Highlights
+- **Fully local**: Ollama + ChromaDB + SQLite; no API keys, no telemetry, no cloud calls.
+- **Grounded answers with citations**: filename, PDF page / DOCX section / sheet+rows, similarity
+  score and the exact chunk text.
+- **Production-minded ingestion**: extension and size validation, SHA-256 duplicate detection,
+  per-file status, atomic settings saves, stale-vector cleanup and a whole-index rebuild.
+- **Configurable retrieval**: similarity or MMR, Top-K, similarity threshold, optional multi-query
+  expansion and per-document search scope.
+- **Streaming UX**: token-by-token answers, stop button that keeps the partial answer, persistent
+  conversations that survive restarts.
+- **Quality gates**: 94 pytest tests (Ollama and Chroma faked for speed), GitHub Actions CI on
+  Python 3.11 and 3.12, and Ruff linting.
+- **Cross-platform**: one-command setup on Windows, macOS and Linux.
 
 ## Features
 - Upload PDF, DOCX, TXT, CSV, XLSX (multiple files, size/extension validation, SHA-256 duplicate detection)
@@ -76,27 +95,47 @@ Notes
 Copy `.env.example` to `.env` (setup does this). Settings changed in the UI are saved to
 `data/user_settings.json` and override `.env` values for the editable options.
 
+## Architecture
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the component diagram, upload/question flows,
+data model, design decisions and testing strategy.
+
 ## Project layout
 ```
-app.py            Streamlit entry point
-config/           Pydantic settings, logging
-core/             Ollama client, embeddings, ChromaDB store, document processing,
-                  chunking, retriever, RAG chain, prompts, evaluation
-database/         SQLAlchemy models, connection, repository
-services/         chat, ingestion, documents, model checks, service container
-ui/               sidebar, chat, documents, settings, shared components
-tests/            pytest suite (Ollama and Chroma are faked where needed)
-data/             created automatically: uploads/, chroma_db/, app.db
-                  (user_settings.json appears after you save Settings)
-logs/             created automatically: app.log
+app.py                Streamlit entry point
+config/               Pydantic settings, logging
+core/                 Ollama client, embeddings, ChromaDB store, document processing,
+                      chunking, retriever, RAG chain, prompts, evaluation
+database/             SQLAlchemy models, connection, repository
+services/             chat, ingestion, documents, model checks, service container
+ui/                   sidebar, chat, documents, settings, shared components
+tests/                pytest suite (Ollama and Chroma are faked where needed)
+docs/                 architecture and design notes
+examples/             sample retrieval-evaluation cases
+.github/workflows/    CI: Ruff + pytest on Python 3.11 and 3.12
+data/                 created automatically: uploads/, chroma_db/, app.db
+                      (user_settings.json appears after you save Settings)
+logs/                 created automatically: app.log
 ```
 
 ## Tests
 ```powershell
 .\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
 python -m pytest
 ```
-Most tests use fakes and need no Ollama. `test_real_chroma_persistence` uses the real ChromaDB.
+On macOS/Linux use `.venv/bin/python -m pip install -r requirements-dev.txt` and
+`.venv/bin/python -m pytest`.
+
+Most tests use fakes and need no Ollama. `test_real_chroma_persistence` uses the real ChromaDB
+and is skipped when it is not installed. Lint with `ruff check .`.
+
+## Retrieval evaluation
+`core/evaluation.py` scores a labelled question set with **hit rate**, **recall@k** and **MRR**:
+```powershell
+python -m core.evaluation examples/evaluation_cases.json
+```
+Edit `examples/evaluation_cases.json` so the questions, filenames and keywords match your indexed
+documents. The command needs Ollama running and at least one indexed document.
 
 ## Limitations
 - **Scanned (image-only) PDFs are not OCR'd.** They are rejected with a clear message; run them
@@ -116,3 +155,6 @@ Most tests use fakes and need no Ollama. `test_real_chroma_persistence` uses the
 | Weird vector-size error after changing embedding model | **Documents → 🛠 Maintenance → Rebuild vector index** |
 | Rebuild stopped part-way | Run **Rebuild vector index** again; unfinished documents are marked *processing* |
 | Details of any error | `logs/app.log` |
+
+## License
+MIT — see [LICENSE](LICENSE).

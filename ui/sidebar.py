@@ -42,7 +42,7 @@ def render_sidebar(services: Services) -> str:
         up = _ollama_up(services.settings.ollama_base_url)
         st.caption(("🟢 Ollama running" if up else "🔴 Ollama offline") + f" · model: `{settings.chat_model}`")
         page = st.radio("Navigation", PAGES, key="page", label_visibility="collapsed")
-        st.button("➕ New chat", use_container_width=True, type="primary", on_click=_new_chat)
+        st.button("➕ New chat", use_container_width=True, type="primary", on_click=_new_chat)  # noqa: RUF001
 
         st.markdown("**Chats**")
         try:

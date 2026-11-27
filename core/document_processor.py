@@ -6,12 +6,15 @@ import io
 import logging
 import re
 import unicodedata
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable
 
 from core.errors import (
-    DocumentProcessingError, EmptyDocumentError, ScannedPDFError, UnsupportedFileError,
+    DocumentProcessingError,
+    EmptyDocumentError,
+    ScannedPDFError,
+    UnsupportedFileError,
 )
 
 logger = logging.getLogger(__name__)

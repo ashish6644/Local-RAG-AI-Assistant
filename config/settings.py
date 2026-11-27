@@ -70,7 +70,7 @@ class Settings(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _overlap_smaller_than_chunk(self) -> "Settings":
+    def _overlap_smaller_than_chunk(self) -> Settings:
         if self.chunk_overlap >= self.chunk_size:
             raise ValueError("CHUNK_OVERLAP must be smaller than CHUNK_SIZE")
         return self

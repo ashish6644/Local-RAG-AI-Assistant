@@ -6,7 +6,6 @@ import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from config.settings import ALLOWED_EXTENSIONS, Settings
 from core.document_processor import process_file
@@ -25,7 +24,7 @@ class IngestResult:
     status: str  # "ready" | "duplicate" | "failed" | "rejected"
     message: str
     filename: str
-    document: Optional[Document] = None
+    document: Document | None = None
     warnings: tuple[str, ...] = ()
 
     @property

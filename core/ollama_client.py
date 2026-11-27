@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Iterator, Optional
+from collections.abc import Iterator
+from typing import Any
 
 import requests
 
@@ -53,7 +54,7 @@ class OllamaClient:
             raise OllamaError(f"Ollama returned an invalid response ({context}).")
         return data
 
-    def _raise_for_status(self, response: Any, model: Optional[str]) -> None:
+    def _raise_for_status(self, response: Any, model: str | None) -> None:
         if response.status_code == 200:
             return
         detail = self._error_text(response)
@@ -65,7 +66,7 @@ class OllamaClient:
             )
         raise OllamaError(f"Ollama returned HTTP {response.status_code}: {detail or 'unknown error'}")
 
-    def _post(self, path: str, payload: dict, *, stream: bool = False, model: Optional[str] = None):
+    def _post(self, path: str, payload: dict, *, stream: bool = False, model: str | None = None):
         try:
             response = self._session.post(
                 self._url(path), json=payload, stream=stream, timeout=self._timeout
@@ -122,10 +123,10 @@ class OllamaClient:
 
     # ---- chat ----------------------------------------------------------
     @staticmethod
-    def _chat_payload(model: str, messages: list[dict], options: Optional[dict], stream: bool) -> dict:
+    def _chat_payload(model: str, messages: list[dict], options: dict | None, stream: bool) -> dict:
         return {"model": model, "messages": messages, "stream": stream, "options": options or {}}
 
-    def chat(self, model: str, messages: list[dict], options: Optional[dict] = None) -> str:
+    def chat(self, model: str, messages: list[dict], options: dict | None = None) -> str:
         response = self._post("/api/chat", self._chat_payload(model, messages, options, False), model=model)
         data = self._json(response, "/api/chat")
         if "error" in data:
@@ -133,7 +134,7 @@ class OllamaClient:
         return str(data.get("message", {}).get("content", ""))
 
     def chat_stream(
-        self, model: str, messages: list[dict], options: Optional[dict] = None
+        self, model: str, messages: list[dict], options: dict | None = None
     ) -> Iterator[str]:
         """Yield tokens as Ollama produces them. Closing the generator aborts generation."""
         response = self._post(

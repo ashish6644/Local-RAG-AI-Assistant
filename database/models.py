@@ -1,6 +1,6 @@
 """SQLAlchemy ORM models."""
-from datetime import datetime, timezone
-from typing import Any, List, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -10,7 +10,7 @@ DEFAULT_TITLE = "New chat"
 
 def utcnow() -> datetime:
     """Naive UTC timestamp (SQLite does not store time zones)."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class Base(DeclarativeBase):
@@ -25,7 +25,7 @@ class Conversation(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
-    messages: Mapped[List["Message"]] = relationship(
+    messages: Mapped[list["Message"]] = relationship(
         back_populates="conversation",
         cascade="all, delete-orphan",
         passive_deletes=True,
@@ -43,7 +43,7 @@ class Message(Base):
     role: Mapped[str] = mapped_column(String(20))  # "user" | "assistant"
     content: Mapped[str] = mapped_column(Text)
     timestamp: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
-    sources: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    sources: Mapped[Any | None] = mapped_column(JSON, nullable=True)
 
     conversation: Mapped["Conversation"] = relationship(back_populates="messages")
 
@@ -60,4 +60,4 @@ class Document(Base):
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     processing_status: Mapped[str] = mapped_column(String(20), default="processing")
     chunk_count: Mapped[int] = mapped_column(Integer, default=0)
-    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)

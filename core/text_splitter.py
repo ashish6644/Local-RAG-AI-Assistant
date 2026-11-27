@@ -1,8 +1,8 @@
 """Configurable chunking that preserves page / location metadata."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from core.document_processor import Segment
 

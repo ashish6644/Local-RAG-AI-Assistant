@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from config.settings import Settings
 from core.errors import AppError
@@ -21,7 +20,7 @@ class DocumentService:
         self.store = store
         self.ingestion = ingestion
 
-    def list_documents(self, status: Optional[str] = None) -> list[Document]:
+    def list_documents(self, status: str | None = None) -> list[Document]:
         return self.repo.list_documents(status)
 
     def delete_document(self, document_id: int) -> bool:
@@ -49,7 +48,7 @@ class DocumentService:
             logger.warning("Could not delete file %s", path)
         return True
 
-    def reindex(self, document_id: int, cfg: Settings) -> Optional[IngestResult]:
+    def reindex(self, document_id: int, cfg: Settings) -> IngestResult | None:
         doc = self.repo.get_document(document_id)
         if doc is None:
             return None

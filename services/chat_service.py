@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Iterator, Optional
+from collections.abc import Iterator
 
 from core.rag_chain import RAGParams, RAGPipeline
 from database.models import DEFAULT_TITLE, Conversation, Message
@@ -24,7 +24,7 @@ class ChatService:
     def list_conversations(self) -> list[Conversation]:
         return self.repo.list_conversations()
 
-    def get_conversation(self, conversation_id: int) -> Optional[Conversation]:
+    def get_conversation(self, conversation_id: int) -> Conversation | None:
         return self.repo.get_conversation(conversation_id)
 
     def rename_conversation(self, conversation_id: int, title: str) -> None:
@@ -54,7 +54,7 @@ class ChatService:
             self.repo.rename_conversation(conversation_id, title + ("…" if len(question) > 50 else ""))
 
         parts: list[str] = []
-        payload: Optional[dict] = None
+        payload: dict | None = None
         completed = False
         try:
             yield {"type": "status", "text": "Searching your documents…"}

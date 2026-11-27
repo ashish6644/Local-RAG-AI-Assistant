@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -48,7 +48,7 @@ class Retriever:
         top_k: int = 4,
         threshold: float = 0.3,
         strategy: str = "similarity",
-        document_ids: Optional[Sequence[int]] = None,
+        document_ids: Sequence[int] | None = None,
     ) -> list[RetrievedChunk]:
         queries = [q.strip() for q in queries if q and q.strip()]
         if not queries:

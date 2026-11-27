@@ -7,14 +7,14 @@ import streamlit as st
 
 st.set_page_config(page_title="Local RAG AI Assistant", page_icon="📚", layout="wide")
 
-from config.settings import load_settings, setup_logging  # noqa: E402
-from core.errors import AppError, ConfigError  # noqa: E402
-from services.container import Services, build_services  # noqa: E402
-from ui.chat_interface import render_chat  # noqa: E402
-from ui.components import inject_css  # noqa: E402
-from ui.document_manager import render_document_manager  # noqa: E402
-from ui.settings import render_settings  # noqa: E402
-from ui.sidebar import PAGES, render_sidebar  # noqa: E402
+from config.settings import load_settings, setup_logging
+from core.errors import AppError, ConfigError
+from services.container import Services, build_services
+from ui.chat_interface import render_chat
+from ui.components import inject_css
+from ui.document_manager import render_document_manager
+from ui.settings import render_settings
+from ui.sidebar import PAGES, render_sidebar
 
 logger = logging.getLogger("app")
 

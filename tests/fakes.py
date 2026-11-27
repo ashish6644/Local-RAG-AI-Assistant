@@ -36,7 +36,7 @@ class FakeStore:
         self.rows: dict[str, dict] = {}
 
     def add_chunks(self, document_id, chunk_ids, texts, embeddings, metadatas):
-        for cid, text, emb, meta in zip(chunk_ids, texts, embeddings, metadatas):
+        for cid, text, emb, meta in zip(chunk_ids, texts, embeddings, metadatas, strict=True):
             self.rows[cid] = {"text": text, "emb": np.array(emb, dtype=float), "meta": dict(meta)}
 
     def delete_document(self, document_id):

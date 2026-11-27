@@ -1,8 +1,7 @@
 """Shared UI helpers: CSS, formatting, source rendering."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 import streamlit as st
 
@@ -27,10 +26,10 @@ def inject_css() -> None:
 
 
 def to_local(dt: datetime) -> datetime:
-    return dt.replace(tzinfo=timezone.utc).astimezone()
+    return dt.replace(tzinfo=UTC).astimezone()
 
 
-def format_dt(dt: Optional[datetime]) -> str:
+def format_dt(dt: datetime | None) -> str:
     return to_local(dt).strftime("%d %b %Y, %H:%M") if dt else ""
 
 
@@ -52,7 +51,7 @@ def _quote(text: str) -> str:
     return "> " + safe.replace("\n", "\n> ")
 
 
-def render_sources(payload: Optional[dict]) -> None:
+def render_sources(payload: dict | None) -> None:
     """Show cited chunks (filename, location, score, text) plus retrieval details."""
     if not payload:
         return

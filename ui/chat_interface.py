@@ -147,7 +147,7 @@ def render_chat(services: Services) -> None:
     )
     if not ok:
         show_error(message)
-        st.code("\n".join(l for l in message.splitlines() if l.startswith("ollama pull")) or "ollama serve")
+        st.code("\n".join(line for line in message.splitlines() if line.startswith("ollama pull")) or "ollama serve")
         return
 
     if conv_id is None:
